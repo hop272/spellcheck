@@ -1,0 +1,3 @@
+cargo:rerun-if-changed=../proto/spellcheck.proto
+cargo:rerun-if-changed=../proto/spellcheck.proto
+cargo:rerun-if-changed=../proto

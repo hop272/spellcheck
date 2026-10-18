@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <title>Polyglot Spellchecker</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; display: flex; height: 100vh; }
+    #editor { flex: 2; padding: 16px; font-size: 16px; line-height: 1.5; border: 0; resize: none; outline: none; }
+    #panel { flex: 1; border-left: 1px solid #ccc; padding: 16px; overflow-y: auto; background: #fafafa; }
+    .item { margin-bottom: 14px; }
+    .orig { font-weight: 600; color: #b00020; }
+    .cand { margin: 2px 4px 0 0; cursor: pointer; }
+    #status { font-size: 12px; color: #666; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <textarea id="editor" placeholder="Start typing..." spellcheck="false"></textarea>
+  <div id="panel">
+    <div id="status">Idle</div>
+    <div id="suggestions"></div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

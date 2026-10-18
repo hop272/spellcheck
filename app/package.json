@@ -1,0 +1,44 @@
+{
+  "name": "polyglot-spellchecker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native Linux desktop spellchecker with AI suggestions",
+  "main": "main.js",
+  "scripts": {
+    "build:rust": "cargo build --release --manifest-path ../orchestrator/Cargo.toml",
+    "start": "npm run build:rust && electron .",
+    "dist": "npm run build:rust && electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "org.hop272.polyglotspellchecker",
+    "productName": "Polyglot Spellchecker",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../orchestrator/target/release/",
+        "to": "bin/",
+        "filter": ["orchestrator"]
+      },
+      {
+        "from": "../python_backend/",
+        "to": "python_backend/",
+        "filter": ["main.py", "ai_service.py", "generated/**"]
+      }
+    ],
+    "asar": true,
+    "linux": {
+      "category": "Utility",
+      "target": ["AppImage", "deb"]
+    }
+  }
+}
