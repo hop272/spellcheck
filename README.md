@@ -26,6 +26,28 @@ proto/           Shared Protocol Buffers service definition
 - `protoc` (Protocol Buffers compiler), for example `sudo apt install protobuf-compiler`
 - Optional: a system word list such as `/usr/share/dict/words` (on Debian/Ubuntu, install `wamerican`)
 
+## Build on CachyOS
+
+CachyOS is Arch-based. Install the native build tools with `pacman`:
+
+```bash
+sudo pacman -S --needed base-devel git nodejs npm rustup python python-pip protobuf
+rustup default stable
+```
+
+Then follow the [Install](#install) steps to install the project dependencies
+and generate the gRPC modules. To run the desktop app from the source tree:
+
+```bash
+cd app
+PYTHON_CMD=../python_backend/.venv/bin/python npm start
+```
+
+To build the existing Linux packages, run `npm run dist` from `app/`. This
+produces an AppImage and a Debian package. Use the AppImage on CachyOS; the
+Python backend and its dependencies must still be available on the target
+system, as described below.
+
 ## Install
 
 Install the Electron and Python dependencies:
