@@ -8,7 +8,7 @@ const path = require("path");
 const crypto = require("crypto");
 
 const isWin = process.platform === "win32";
-const REQUEST_TIMEOUT_MS = 20000;
+const REQUEST_TIMEOUT_MS = 185000;
 
 let win = null;
 let orchestrator = null;
@@ -93,6 +93,13 @@ app.whenReady().then(() => {
   ipcMain.handle("spellcheck:check", (_event, { text, language }) => {
     if (typeof text !== "string") return { suggestions: [], source: "error", error: "invalid input" };
     return sendToRust({ text, language: language || "en" });
+  });
+  ipcMain.handle("text-enhance:models", () => sendToRust({ operation: "models" }));
+  ipcMain.handle("text-enhance:enhance", (_event, { text, instruction, model }) => {
+    if (typeof text !== "string" || typeof instruction !== "string" || typeof model !== "string") {
+      return { source: "error", error: "invalid input" };
+    }
+    return sendToRust({ operation: "enhance", text, instruction, model });
   });
 
   createWindow();

@@ -2,24 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
-  <title>Polyglot Spellchecker</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 0; display: flex; height: 100vh; }
-    #editor { flex: 2; padding: 16px; font-size: 16px; line-height: 1.5; border: 0; resize: none; outline: none; }
-    #panel { flex: 1; border-left: 1px solid #ccc; padding: 16px; overflow-y: auto; background: #fafafa; }
-    .item { margin-bottom: 14px; }
-    .orig { font-weight: 600; color: #b00020; }
-    .cand { margin: 2px 4px 0 0; cursor: pointer; }
-    #status { font-size: 12px; color: #666; margin-bottom: 12px; }
-  </style>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polyglot | Writing desk</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <textarea id="editor" placeholder="Start typing..." spellcheck="false"></textarea>
-  <div id="panel">
-    <div id="status">Idle</div>
-    <div id="suggestions"></div>
-  </div>
+  <header class="app-header">
+    <a class="wordmark" href="#editor" aria-label="Polyglot writing desk">polyglot<span>.</span></a>
+    <div class="header-caption">LOCAL WRITING DESK</div>
+    <nav class="mode-tabs" aria-label="Writing tools">
+      <button id="spellTab" class="tab active" type="button" aria-pressed="true">Spellcheck</button>
+      <button id="enhanceTab" class="tab" type="button" aria-pressed="false">Enhance text</button>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <section class="writing-column" aria-label="Text editor">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">YOUR DOCUMENT</p>
+          <h1>Make the words work.</h1>
+        </div>
+        <span id="count" class="count">0 words</span>
+      </div>
+      <textarea id="editor" placeholder="Start with a thought, a draft, or a paragraph..." spellcheck="false" aria-label="Document text"></textarea>
+      <div class="editor-footer">
+        <span id="status" role="status" aria-live="polite">Ready when you are</span>
+        <span class="privacy-note">Text stays on this device</span>
+      </div>
+      <section id="review" class="review hidden" aria-labelledby="review-heading">
+        <div class="review-heading">
+          <div>
+            <p class="eyebrow">PROPOSED EDIT</p>
+            <h2 id="review-heading">Review before applying</h2>
+          </div>
+          <button id="discardReview" class="quiet-button" type="button">Keep original</button>
+        </div>
+        <div class="comparison">
+          <section class="compare-pane">
+            <h3>Original</h3>
+            <pre id="originalText"></pre>
+          </section>
+          <section class="compare-pane proposal">
+            <h3>Suggestion</h3>
+            <pre id="proposedText"></pre>
+          </section>
+        </div>
+        <div class="review-actions">
+          <span>Nothing changes until you apply the suggestion.</span>
+          <button id="applyReview" class="primary-button" type="button">Apply suggestion</button>
+        </div>
+      </section>
+      <div id="undoRow" class="undo-row hidden">
+        <span>Last enhancement applied</span>
+        <button id="undoReview" class="quiet-button" type="button">Undo</button>
+      </div>
+    </section>
+
+    <aside class="tool-column">
+      <section id="spellPanel" class="tool-panel">
+        <div class="panel-title"><span class="panel-index">01</span><h2>Spellcheck</h2></div>
+        <p class="panel-copy">Find likely misspellings and choose a correction in context.</p>
+        <button id="checkButton" class="primary-button full-button" type="button">Check text</button>
+        <div id="suggestions" class="suggestions" aria-live="polite"></div>
+      </section>
+
+      <section id="enhancePanel" class="tool-panel hidden">
+        <div class="panel-title"><span class="panel-index">02</span><h2>Enhance text</h2></div>
+        <p class="panel-copy">Ask a local model to revise the draft, then review its proposal.</p>
+        <label for="modelSelect">Ollama model</label>
+        <div class="model-row">
+          <select id="modelSelect" aria-label="Ollama model"><option value="">Refresh models</option></select>
+          <button id="refreshModels" class="icon-button" type="button" aria-label="Refresh local models" title="Refresh local models">↻</button>
+        </div>
+        <label for="modeSelect">Editing mode</label>
+        <select id="modeSelect">
+          <option>Grammar</option><option>Proofread</option><option>Natural</option>
+          <option>Streamline</option><option>Awkward</option><option>Rewrite</option>
+          <option>Concise</option><option>Polish</option><option>Improve</option>
+          <option>Translate</option><option>Custom</option>
+        </select>
+        <div id="translateField" class="conditional-field hidden">
+          <label for="targetLanguage">Target language</label>
+          <input id="targetLanguage" type="text" value="English" />
+        </div>
+        <div id="customField" class="conditional-field hidden">
+          <label for="customInstruction">Your instruction</label>
+          <textarea id="customInstruction" class="instruction-input" rows="3" placeholder="Describe the edit you want..."></textarea>
+        </div>
+        <button id="enhanceButton" class="primary-button full-button" type="button">Generate proposal</button>
+        <p class="local-note">Uses Ollama and a model installed on your machine.</p>
+      </section>
+    </aside>
+  </main>
+  <!-- Review-first editing workflow adapted from TextEnhanceAI by wenrolland, GPL-3.0. -->
   <script src="renderer.js"></script>
 </body>
 </html>

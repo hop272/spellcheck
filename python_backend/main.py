@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent / "generated"))
 import spellcheck_pb2 as pb  # noqa: E402
 import spellcheck_pb2_grpc as pb_grpc  # noqa: E402
 
-from ai_service import AIEngine  # noqa: E402
+from ai_service import AIEngine, LocalTextEnhancer  # noqa: E402
 
 ADDRESS = os.environ.get("PYTHON_BACKEND_BIND", "127.0.0.1:50051")  # loopback only
 
@@ -20,6 +20,7 @@ ADDRESS = os.environ.get("PYTHON_BACKEND_BIND", "127.0.0.1:50051")  # loopback o
 class SpellcheckerServicer(pb_grpc.SpellcheckerServicer):
     def __init__(self, engine: AIEngine):
         self.engine = engine
+        self.text_enhancer = None
 
     async def Check(self, request, context):
         spans = [(s.start, s.end, s.word) for s in request.suspect_spans]
@@ -44,6 +45,37 @@ class SpellcheckerServicer(pb_grpc.SpellcheckerServicer):
                 for r in results
             ],
         )
+
+    async def Enhance(self, request, context):
+        try:
+            if self.text_enhancer is None:
+                self.text_enhancer = LocalTextEnhancer()
+            proposed_text = await asyncio.to_thread(
+                self.text_enhancer.enhance,
+                request.text,
+                request.instruction,
+                request.model,
+            )
+        except Exception as exc:
+            logging.exception("text enhancement failed")
+            await context.abort(grpc.StatusCode.INTERNAL, str(exc))
+
+        return pb.EnhanceResponse(
+            request_id=request.request_id,
+            proposed_text=proposed_text,
+            model=request.model,
+        )
+
+    async def ListModels(self, request, context):
+        try:
+            if self.text_enhancer is None:
+                self.text_enhancer = LocalTextEnhancer()
+            models = await asyncio.to_thread(self.text_enhancer.list_models)
+        except Exception as exc:
+            logging.exception("Ollama model discovery failed")
+            await context.abort(grpc.StatusCode.UNAVAILABLE, str(exc))
+
+        return pb.ListModelsResponse(request_id=request.request_id, models=models)
 
 
 async def serve() -> None:

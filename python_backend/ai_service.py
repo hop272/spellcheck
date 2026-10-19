@@ -137,3 +137,52 @@ class LlamaCppEngine(AIEngine):
                 temperature=0.0,
             )
         return res["choices"][0]["message"]["content"]
+
+
+class LocalTextEnhancer:
+    """Use a locally served Ollama model for reviewable text edits.
+
+    The editing prompt and mode workflow are adapted from TextEnhanceAI by
+    wenrolland (GPL-3.0): https://github.com/wenrolland/TextEnhanceAI.
+    """
+
+    def __init__(self):
+        try:
+            from ollama import Client
+        except ImportError as exc:
+            raise RuntimeError("Install the Ollama client with: pip install ollama") from exc
+        self.client = Client(host=os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434"))
+
+    def list_models(self) -> list[str]:
+        response = self.client.list()
+        items = response.get("models", []) if isinstance(response, dict) else response.models
+        names = []
+        for item in items or []:
+            name = item.get("model") or item.get("name") if isinstance(item, dict) else getattr(item, "model", None) or getattr(item, "name", None)
+            if name:
+                names.append(str(name))
+        return sorted(set(names))
+
+    def enhance(self, text: str, instruction: str, model: str) -> str:
+        if not text.strip():
+            raise ValueError("Enter text to enhance.")
+        if not instruction.strip():
+            raise ValueError("Choose an editing instruction.")
+        if not model.strip():
+            raise ValueError("Choose an Ollama model.")
+        response = self.client.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": "Instruction:\n{0}\n\nText:\n{1}".format(instruction, text),
+                },
+            ],
+            options={"num_predict": 4096, "temperature": 0.1, "top_p": 0.9},
+        )
+        message = response.get("message", {}) if isinstance(response, dict) else response.message
+        content = message.get("content", "") if isinstance(message, dict) else message.content
+        if not content or not content.strip():
+            raise RuntimeError("Ollama returned an empty response.")
+        return content

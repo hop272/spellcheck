@@ -25,6 +25,7 @@ use pb::{
 
 const MAX_TEXT_BYTES: usize = 200_000;
 const GRPC_TIMEOUT: Duration = Duration::from_secs(15);
+const ENHANCE_TIMEOUT: Duration = Duration::from_secs(180);
 
 // ---------- Electron-facing JSON types ----------
 #[derive(Deserialize)]
@@ -174,7 +175,7 @@ async fn handle(state: Arc<State>, req: UiRequest) -> UiResponse {
             model: req.model,
         };
         let mut client = state.client.clone();
-        return match timeout(GRPC_TIMEOUT, client.enhance(tonic::Request::new(grpc_req))).await {
+        return match timeout(ENHANCE_TIMEOUT, client.enhance(tonic::Request::new(grpc_req))).await {
             Ok(Ok(response)) => UiResponse {
                 id: req.id,
                 suggestions: vec![],
