@@ -18,7 +18,10 @@ use tonic::transport::{Channel, Endpoint};
 mod pb {
     tonic::include_proto!("spellcheck.v1");
 }
-use pb::{spellchecker_client::SpellcheckerClient, Span, SpellcheckRequest};
+use pb::{
+    spellchecker_client::SpellcheckerClient, EnhanceRequest, ListModelsRequest, Span,
+    SpellcheckRequest,
+};
 
 const MAX_TEXT_BYTES: usize = 200_000;
 const GRPC_TIMEOUT: Duration = Duration::from_secs(15);
@@ -27,9 +30,19 @@ const GRPC_TIMEOUT: Duration = Duration::from_secs(15);
 #[derive(Deserialize)]
 struct UiRequest {
     id: String,
+    #[serde(default = "default_operation")]
+    operation: String,
+    #[serde(default)]
     text: String,
     #[serde(default = "default_lang")]
     language: String,
+    #[serde(default)]
+    instruction: String,
+    #[serde(default)]
+    model: String,
+}
+fn default_operation() -> String {
+    "check".into()
 }
 fn default_lang() -> String {
     "en".into()
@@ -51,6 +64,8 @@ struct UiResponse {
     suggestions: Vec<UiSuggestion>,
     source: &'static str, // "prefilter" | "cache" | "ai" | "error"
     error: Option<String>,
+    proposed_text: Option<String>,
+    models: Option<Vec<String>>,
 }
 
 fn respond(
@@ -64,6 +79,8 @@ fn respond(
         suggestions,
         source,
         error,
+        proposed_text: None,
+        models: None,
     }
 }
 
@@ -127,6 +144,50 @@ fn find_suspects(text: &str, dict: &HashSet<String>) -> Vec<Span> {
 }
 
 async fn handle(state: Arc<State>, req: UiRequest) -> UiResponse {
+    if req.operation == "models" {
+        let grpc_req = ListModelsRequest {
+            request_id: req.id.clone(),
+        };
+        let mut client = state.client.clone();
+        return match timeout(GRPC_TIMEOUT, client.list_models(tonic::Request::new(grpc_req))).await {
+            Ok(Ok(response)) => UiResponse {
+                id: req.id,
+                suggestions: vec![],
+                source: "ai",
+                error: None,
+                proposed_text: None,
+                models: Some(response.into_inner().models),
+            },
+            Ok(Err(status)) => respond(req.id, vec![], "error", Some(format!("backend: {}", status.message()))),
+            Err(_) => respond(req.id, vec![], "error", Some("backend timeout".into())),
+        };
+    }
+
+    if req.operation == "enhance" {
+        if req.text.len() > MAX_TEXT_BYTES {
+            return respond(req.id, vec![], "error", Some("text too large".into()));
+        }
+        let grpc_req = EnhanceRequest {
+            request_id: req.id.clone(),
+            text: req.text,
+            instruction: req.instruction,
+            model: req.model,
+        };
+        let mut client = state.client.clone();
+        return match timeout(GRPC_TIMEOUT, client.enhance(tonic::Request::new(grpc_req))).await {
+            Ok(Ok(response)) => UiResponse {
+                id: req.id,
+                suggestions: vec![],
+                source: "ai",
+                error: None,
+                proposed_text: Some(response.into_inner().proposed_text),
+                models: None,
+            },
+            Ok(Err(status)) => respond(req.id, vec![], "error", Some(format!("backend: {}", status.message()))),
+            Err(_) => respond(req.id, vec![], "error", Some("backend timeout".into())),
+        };
+    }
+
     if req.text.len() > MAX_TEXT_BYTES {
         return respond(req.id, vec![], "error", Some("text too large".into()));
     }

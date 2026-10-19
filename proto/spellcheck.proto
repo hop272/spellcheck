@@ -9,6 +9,10 @@ service Spellchecker {
   // ARCH NOTE: add `rpc CheckStream(stream SpellcheckRequest) returns
   // (stream SpellcheckResponse)` for token-by-token streaming later.
   rpc Check(SpellcheckRequest) returns (SpellcheckResponse);
+  // Local text editing and model discovery follow the review workflow in
+  // TextEnhanceAI by wenrolland (GPL-3.0): https://github.com/wenrolland/TextEnhanceAI.
+  rpc Enhance(EnhanceRequest) returns (EnhanceResponse);
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
 }
 
 // A flagged word. Offsets are UTF-16 code units so they map 1:1 onto
@@ -39,4 +43,26 @@ message SpellcheckResponse {
   string request_id = 1;
   repeated Suggestion suggestions = 2;
   string model = 3;                // which backend/model answered
+}
+
+message EnhanceRequest {
+  string request_id = 1;
+  string text = 2;
+  string instruction = 3;
+  string model = 4;
+}
+
+message EnhanceResponse {
+  string request_id = 1;
+  string proposed_text = 2;
+  string model = 3;
+}
+
+message ListModelsRequest {
+  string request_id = 1;
+}
+
+message ListModelsResponse {
+  string request_id = 1;
+  repeated string models = 2;
 }

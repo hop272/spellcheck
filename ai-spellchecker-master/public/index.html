@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Speaker Notes Spell Checker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Speaker Notes Spell Checker</h1>
+      <p class="subtitle">AI powered context-aware spell checking for presentations</p>
+    </header>
+
+    <main>
+      <!-- Editor Area - Side by Side -->
+      <div class="editor-area">
+        <!-- Speaker Notes - Main -->
+        <section class="notes-section">
+          <div class="editor-container">
+            <div id="editorContent" class="editor-content" contenteditable="true" data-placeholder="Type or paste your speaker notes here..."></div>
+            <div id="editorStatus" class="editor-status hidden">
+              <span class="status-icon"></span>
+              <span id="statusText"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Control Panel - Sidebar -->
+        <aside class="control-panel">
+          <div class="panel-content">
+            <h2>Spell Check</h2>
+            <p class="panel-description">Check your speaker notes for spelling, grammar, and terminology issues.</p>
+
+            <!-- AI Toggle -->
+            <div class="ai-toggle-section">
+              <div class="toggle-row">
+                <span class="toggle-label">Include AI</span>
+                <label class="ai-toggle">
+                  <input type="checkbox" id="aiToggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <p class="toggle-description">
+                AI checks terminology against your slide content and catches contextual issues.
+                <span class="token-note">Uses tokens from your plan.</span>
+              </p>
+            </div>
+
+            <button id="checkBtn" class="check-button">
+              Check Spelling
+            </button>
+
+            <div id="resultsInfo" class="results-info hidden">
+              <div class="results-count">
+                <span id="issueCount">0</span> issues found
+              </div>
+              <button id="correctAllBtn" class="correct-all-button">
+                Correct All
+              </button>
+              <p class="results-hint">Click underlined words to see suggestions</p>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <div class="getting-started">
+        <span class="getting-started-label">Get started →</span>
+        <button id="slideContextBtn" class="step-link">
+          <span class="step-num">1</span> Add slide context
+        </button>
+        <span class="step-separator">→</span>
+        <span class="step-item"><span class="step-num">2</span> Paste speaker notes</span>
+        <span class="step-separator">→</span>
+        <span class="step-item"><span class="step-num">3</span> Check spelling</span>
+      </div>
+      <div class="footer-meta">
+        <span class="ai-status">AI: <span id="aiStatus">Checking...</span></span>
+        <span class="footer-credit">Built with ♥ by Jasa Niklanovic</span>
+      </div>
+    </footer>
+
+    <!-- Slide Context Modal -->
+    <div id="contextModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Slide Context</h2>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-description">Paste your slide content here so AI can match your brand terminology and suggest contextual corrections.</p>
+          <textarea id="slideContent" placeholder="Paste slide content here for context-aware terminology checking..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button id="modalSave" class="modal-save-btn">Save Context</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Suggestion Popup -->
+    <div id="suggestionPopup" class="suggestion-popup hidden">
+      <div class="popup-header">
+        <span class="popup-title">Suggestion</span>
+        <button class="popup-close" id="popupClose">&times;</button>
+      </div>
+      <div class="popup-context" id="popupContext"></div>
+      <div class="popup-suggestion">
+        <span class="wrong-word" id="wrongWord"></span>
+        <span class="arrow">→</span>
+        <span class="correct-word" id="correctWord"></span>
+      </div>
+      <div class="popup-reason" id="popupReason"></div>
+      <div class="popup-actions">
+        <button class="btn-accept" id="btnAccept">Accept</button>
+        <button class="btn-dismiss" id="btnDismiss">Dismiss</button>
+      </div>
+      <div class="popup-nav">
+        <button class="nav-btn" id="navPrev">&lt;</button>
+        <span class="nav-count"><span id="currentIndex">1</span> / <span id="totalCount">1</span></span>
+        <button class="nav-btn" id="navNext">&gt;</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
